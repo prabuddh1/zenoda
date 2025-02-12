@@ -1,0 +1,17 @@
+syntax = "proto3";
+package zenoda.zenoda;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "zenoda/zenoda/params.proto";
+
+option go_package = "zenoda/x/zenoda/types";
+
+// GenesisState defines the zenoda module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zenoda.zenoda;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "zenoda/x/zenoda/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "zenoda/x/zenoda/Params";
+  option (gogoproto.equal) = true;
+
+  
+}
