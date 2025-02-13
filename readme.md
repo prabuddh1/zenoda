@@ -4,7 +4,7 @@
 
 ## Zenoda Chain Architecture
 
-![Alt Text](/enoda1.png)
+![Alt Text](/Enoda1.png)
 
 ## Zenoda Chain Thoery of above Architecture
 **Zenoda Chain** is a custom built chain that incorporates several innovative changes as compared to existing Cosmos based chains. Below we describe the flow for **Zenoda** chain (markings done as per the above architecture diagram):
