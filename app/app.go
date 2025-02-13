@@ -75,7 +75,9 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
+	rewardsmodulekeeper "zenoda/x/rewards/keeper"
 	zenodamodulekeeper "zenoda/x/zenoda/keeper"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	"zenoda/docs"
@@ -141,7 +143,8 @@ type App struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
-	ZenodaKeeper zenodamodulekeeper.Keeper
+	ZenodaKeeper  zenodamodulekeeper.Keeper
+	RewardsKeeper rewardsmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -246,6 +249,7 @@ func New(
 		&app.GroupKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ZenodaKeeper,
+		&app.RewardsKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)

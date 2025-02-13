@@ -1,0 +1,17 @@
+syntax = "proto3";
+package zenoda.rewards;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "zenoda/rewards/params.proto";
+
+option go_package = "zenoda/x/rewards/types";
+
+// GenesisState defines the rewards module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

@@ -53,7 +53,10 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	rewardsmodulev1 "zenoda/api/zenoda/rewards/module"
 	zenodamodulev1 "zenoda/api/zenoda/zenoda/module"
+	_ "zenoda/x/rewards/module" // import for side-effects
+	rewardsmoduletypes "zenoda/x/rewards/types"
 	_ "zenoda/x/zenoda/module" // import for side-effects
 	zenodamoduletypes "zenoda/x/zenoda/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -94,6 +97,7 @@ var (
 		circuittypes.ModuleName,
 		// chain modules
 		zenodamoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -119,6 +123,7 @@ var (
 		ibcfeetypes.ModuleName,
 		// chain modules
 		zenodamoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -138,6 +143,7 @@ var (
 		ibcfeetypes.ModuleName,
 		// chain modules
 		zenodamoduletypes.ModuleName,
+		rewardsmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -296,6 +302,10 @@ var (
 			{
 				Name:   zenodamoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&zenodamodulev1.Module{}),
+			},
+			{
+				Name:   rewardsmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&rewardsmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

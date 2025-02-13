@@ -1,0 +1,16 @@
+syntax = "proto3";
+package zenoda.rewards;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "zenoda/x/rewards/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "zenoda/x/rewards/Params";
+  option (gogoproto.equal) = true;
+  string inflation_rate = 1;
+  repeated string predefined_wallets = 2;
+  
+}
