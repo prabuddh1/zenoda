@@ -9,6 +9,8 @@ import (
 // AccountKeeper defines the expected interface for the Account module.
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
 	HasAccount(context.Context, sdk.AccAddress) bool
 	SetAccount(context.Context, sdk.AccountI)
 	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI

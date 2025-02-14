@@ -258,20 +258,20 @@ func (k Keeper) ClearLock(ctx sdk.Context, lockKey string) {
 // 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.RewardsModuleName, sdk.NewCoins(amount))
 // }
 
-// SendInitialEGV sends the initial EGV amount to a given address
-func (k Keeper) SendInitialEGV(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) error {
-	// Use the BankKeeper to get the supply (total amount) of EGV in the module
-	supply := k.bankKeeper.GetSupply(ctx, coin.Denom)
+// // SendInitialEGV sends the initial EGV amount to a given address
+// func (k Keeper) SendInitialEGV(ctx sdk.Context, addr sdk.AccAddress, coin sdk.Coin) error {
+// 	// Use the BankKeeper to get the supply (total amount) of EGV in the module
+// 	supply := k.bankKeeper.GetSupply(ctx, types.EGVDenom)
 
-	// Check if the module account has enough balance (checking the supply in this case)
-	if supply.IsLT(coin) {
-		return fmt.Errorf("insufficient balance in the rewards module to send initial EGV to %s: available %s, needed %s", addr, supply.String(), coin.String())
-	}
+// 	// Check if the module account has enough balance (checking the supply in this case)
+// 	if supply.IsLT(coin) {
+// 		return fmt.Errorf("insufficient balance in the rewards module to send initial EGV to %s: available %s, needed %s", addr, supply.String(), coin.String())
+// 	}
 
-	// Use BankKeeper to send coins from the rewards module to the predefined wallet
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(coin)); err != nil {
-		return fmt.Errorf("failed to send initial EGV to address %s: %v", addr, err)
-	}
+// 	// Use BankKeeper to send coins from the rewards module to the predefined wallet
+// 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(coin)); err != nil {
+// 		return fmt.Errorf("failed to send initial EGV to address %s: %v", addr, err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

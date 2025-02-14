@@ -3,85 +3,107 @@ package rewards
 import (
 	"fmt"
 
-	"zenoda/x/rewards/keeper"
-	"zenoda/x/rewards/types"
-
 	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"zenoda/x/rewards/keeper"
+	"zenoda/x/rewards/types"
 )
 
-// InitGenesis initializes the module's state from a provided genesis state.
+// InitGenesis initializes the module's state from the provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	// Set the module parameters from the genesis state
-	if err := k.SetParams(ctx, genState.Params); err != nil {
+	ctx.Logger().Info("🚀 Initializing rewards module genesis...")
+
+	// // Get the rewards module account address
+	// moduleAddr := k.GetAccountKeeper().GetModuleAddress(types.ModuleName)
+
+	// // Retrieve the account from the store using the GetAccount method
+	// account := k.GetAccountKeeper().GetAccount(ctx, moduleAddr)
+
+	// // Check if the account exists
+	// if account == nil {
+	// 	ctx.Logger().Info("❌ Rewards module account does not exist, creating...")
+	// 	// Create and set the rewards module account
+	// 	account = k.GetAccountKeeper().NewAccountWithAddress(ctx, moduleAddr)
+	// 	k.GetAccountKeeper().SetAccount(ctx, account) // Set the newly created account
+	// 	ctx.Logger().Info("✅ Created rewards module account", "address", moduleAddr.String())
+	// } else {
+	// 	ctx.Logger().Info("✅ Rewards module account already exists", "address", moduleAddr.String())
+	// }
+
+	// // Check again to ensure the module account is registered before minting
+	// if !k.GetAccountKeeper().HasAccount(ctx, moduleAddr) {
+	// 	panic("module account rewards does not exist after creation")
+	// }
+
+	// // Verify the module account address
+	// ctx.Logger().Info("Module account address for minting", "address", moduleAddr.String())
+
+	// Directly create a new module account using the module name "rewards" (from keys.go)
+	moduleAddr := sdk.AccAddress(types.ModuleName) // "rewards" should be used from keys.go
+	// Create the new module account using NewAccountWithAddress
+	account := k.GetAccountKeeper().NewAccountWithAddress(ctx, moduleAddr)
+
+	// Set the newly created account in the store
+	k.GetAccountKeeper().SetAccount(ctx, account)
+
+	// Log the creation of the module account
+	ctx.Logger().Info("✅ Created rewards module account", moduleAddr)
+	ctx.Logger().Info("✅ Created rewards module account", "address", moduleAddr.String())
+
+	// Retrieve the account from the store using GetAccount
+	account = k.GetAccountKeeper().GetAccount(ctx, moduleAddr)
+
+	// Log account details to verify
+	ctx.Logger().Info("Account retrieved", "address", moduleAddr.String(), "account details", account)
+
+	// Define the initial amount each predefined wallet will receive
+	initialAmount := sdk.NewCoin(types.EGVDenom, math.NewInt(1000)) // Each gets 1000 EGV
+	totalSupply := math.NewInt(int64(len(genState.Params.PredefinedWallets))).Mul(initialAmount.Amount)
+
+	// Ensure that the module account exists before minting
+	ctx.Logger().Info("Checking if the module account exists before minting", "moduleAccountExists", k.GetAccountKeeper().HasAccount(ctx, moduleAddr))
+
+	// Explicitly log the module address before minting
+	ctx.Logger().Info("Attempting to mint coins for the module account", "moduleAddress", moduleAddr.String())
+
+	// Mint tokens only once for the total supply
+	err := k.GetBankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.EGVDenom, totalSupply)))
+	if err != nil {
+		ctx.Logger().Error("❌ Failed to mint initial EGV tokens", "error", err)
 		panic(err)
 	}
 
-	// Create the rewards module account (rewards)
-	rewardsModuleAccountAddr := k.GetAccountKeeper().GetModuleAddress(types.ModuleName)            // "rewards"
-	fmt.Println("Checking if rewards module account exists at address:", rewardsModuleAccountAddr) // Log this address
+	ctx.Logger().Info("💰 Minted total EGV tokens for initial distribution", "amount", totalSupply)
 
-	if !k.GetAccountKeeper().HasAccount(ctx, rewardsModuleAccountAddr) {
-		fmt.Println("Creating Rewards Module Account (rewards) at address:", rewardsModuleAccountAddr)
-		account := k.GetAccountKeeper().NewAccountWithAddress(ctx, rewardsModuleAccountAddr)
-		k.GetAccountKeeper().SetAccount(ctx, account)
-	} else {
-		fmt.Println("Rewards Module Account (rewards) already exists at address:", rewardsModuleAccountAddr)
-	}
-
-	// Create the rewards pool module account (rewards_pool)
-	rewardsPoolAccountAddr := k.GetAccountKeeper().GetModuleAddress(types.RewardsModuleName)          // "rewards_pool"
-	fmt.Println("Checking if rewards pool module account exists at address:", rewardsPoolAccountAddr) // Log this address
-
-	if !k.GetAccountKeeper().HasAccount(ctx, rewardsPoolAccountAddr) {
-		fmt.Println("Creating Rewards Pool Module Account (rewards_pool) at address:", rewardsPoolAccountAddr)
-		account := k.GetAccountKeeper().NewAccountWithAddress(ctx, rewardsPoolAccountAddr)
-		k.GetAccountKeeper().SetAccount(ctx, account)
-	} else {
-		fmt.Println("Rewards Pool Module Account (rewards_pool) already exists at address:", rewardsPoolAccountAddr)
-	}
-
-	// Check if the rewards module account is registered with the bank keeper
-	fmt.Println("Module account registered with bank keeper: ", k.GetAccountKeeper().HasAccount(ctx, rewardsModuleAccountAddr))
-
-	// Mint initial EGV tokens to the rewards module account
-	mintAmount := math.NewInt(10000)
-	err := k.GetBankKeeper().MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.EGVDenom, mintAmount)))
-	if err != nil {
-		panic(fmt.Sprintf("Failed to mint initial EGV tokens: %v", err))
-	}
-	fmt.Println("Minted", mintAmount, "EGV tokens")
-
-	// Distribute the initial EGV tokens to the predefined addresses based on the genesis state
-	predefinedAddresses := genState.Params.PredefinedWallets
-	initialEGVAmount := sdk.NewCoin(types.EGVDenom, math.NewInt(1000)) // 1000 EGV tokens to distribute to each predefined address
-
-	for _, addr := range predefinedAddresses {
-		address, err := sdk.AccAddressFromBech32(addr)
+	// Distribute to predefined wallets
+	for _, addressStr := range genState.Params.PredefinedWallets {
+		address, err := sdk.AccAddressFromBech32(addressStr)
 		if err != nil {
-			panic(fmt.Sprintf("invalid predefined address: %s", addr))
+			ctx.Logger().Error("❌ Invalid predefined wallet address", "address", addressStr, "error", err)
+			panic(fmt.Sprintf("invalid address in genesis: %s", err))
 		}
 
-		// Send initial EGV tokens to each predefined address
-		if err := k.SendInitialEGV(ctx, address, initialEGVAmount); err != nil {
-			panic(fmt.Sprintf("failed to send initial EGV to address: %s", addr))
+		// Send tokens from module account to predefined wallet
+		err = k.GetBankKeeper().SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, sdk.NewCoins(initialAmount))
+		if err != nil {
+			ctx.Logger().Error("❌ Failed to send EGV tokens to address", "address", addressStr, "error", err)
+			panic(err)
 		}
+
+		ctx.Logger().Info("✅ Distributed initial EGV tokens", "address", addressStr, "amount", initialAmount.Amount)
 	}
 
-	supply := k.GetBankKeeper().GetSupply(ctx, types.EGVDenom)
-	fmt.Println("Total supply of EGV:", supply.Amount.String())
+	// Store total supply in the keeper
+	k.SetTotalSupply(ctx, sdk.NewCoin(types.EGVDenom, totalSupply))
+
+	ctx.Logger().Info("✅ Rewards module genesis successfully initialized")
 }
 
-// ExportGenesis returns the module's exported genesis state as raw JSON bytes.
+// ExportGenesis exports the module's state.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	// Get the current parameters from the keeper
-	params := k.GetParams(ctx)
+	genesis := types.DefaultGenesis()
+	genesis.Params = k.GetParams(ctx)
 
-	// Generate the GenesisState with the current parameters
-	genesisState := types.GenesisState{
-		Params: params,
-	}
-
-	// Return the exported GenesisState
-	return &genesisState
+	return genesis
 }
